@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Futuristic Keylogger Interface</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    body {
+      background: #0a0a0a;
+      color: #ffffff;
+      font-family: 'Courier New', monospace;
+      overflow: hidden;
+    }
+    .terminal {
+      padding: 16px;
+      background: rgba(0, 0, 0, 0.8);
+      border: 1px solid #00ff41;
+      box-shadow: 0 0 20px #00ff41;
+      height: 90vh;
+      overflow-y: auto;
+      margin: 20px;
+      position: relative;
+    }
+    .terminal::-webkit-scrollbar {
+      width: 8px;
+    }
+    .terminal::-webkit-scrollbar-thumb {
+      background: #00ff41;
+      border-radius: 4px;
+    }
+    .line {
+      color: #00ff41;
+      white-space: pre-wrap;
+    }
+    .cursor-blink::after {
+      content: '█';
+      animation: blink 1s step-end infinite;
+      color: #00ff41;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const Terminal = () => {
+      const [output, setOutput] = useState([]);
+
+      useEffect(() => {
+        const fetchLogs = async () => {
+          try {
+            const res = await fetch("http://localhost:5000/logs");
+            const data = await res.json();
+            setOutput(data);
+          } catch (err) {
+            setOutput(["[ERROR] Could not fetch keylogs. Is backend running?"]);
+          }
+        };
+
+        fetchLogs();
+        const interval = setInterval(fetchLogs, 2000);
+        return () => clearInterval(interval);
+      }, []);
+
+      return (
+        <div className="terminal">
+          <h3 className="line">ChronoScribe v2.4.7</h3>
+          <div style={{ marginBottom: "8px" }} className="line"> Listening for keystrokes...</div>
+          {output.map((line, i) => (
+            <div key={i} className="line">{line}</div>
+          ))}
+          <div className="line cursor-blink"></div>
+        </div>
+      );
+    };
+
+    ReactDOM.render(<Terminal />, document.getElementById("root"));
+  </script>
+</body>
+</html>
